@@ -72,7 +72,7 @@ import Speech
     /// override, wake…), which must not stop the transcription we just started.
     /// Only an interruption that began, a vanished input device, or a media
     /// server reset genuinely ends the capture.
-    static func interruptsCapture(for notification: Notification) -> Bool {
+    static nonisolated func interruptsCapture(for notification: Notification) -> Bool {
         switch notification.name {
         case AVAudioSession.interruptionNotification:
             let raw = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
