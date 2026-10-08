@@ -5,13 +5,15 @@ BD807657989E4E475F52F68C = {isa = PBXFileReference; lastKnownFileType = sourceco
 2D764CD838DB39F040AA7EC4 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (6A2750D6FB7B2C4D07D47C13); runOnlyForDeploymentPostprocessing = 0;};
 4ABE2D3A7C0ED6A1AFFABD28 = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LivecriptTests/BootstrapTests.swift"; sourceTree = SOURCE_ROOT;};
 EC54E7F17FADD5CA03FA8A13 = {isa = PBXBuildFile; fileRef = 4ABE2D3A7C0ED6A1AFFABD28;};
-9F3002A5D69B22D357A58AA9 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (EC54E7F17FADD5CA03FA8A13); runOnlyForDeploymentPostprocessing = 0;};
+CC488E7A8A7BD9269EDB12EB = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "LivecriptTests/CoreTests.swift"; sourceTree = SOURCE_ROOT;};
+9A42056443D97ED8A74D6A65 = {isa = PBXBuildFile; fileRef = CC488E7A8A7BD9269EDB12EB;};
+9F3002A5D69B22D357A58AA9 = {isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = (EC54E7F17FADD5CA03FA8A13,9A42056443D97ED8A74D6A65); runOnlyForDeploymentPostprocessing = 0;};
 8BCD5BC4CDFDF0918087C782 = {isa = PBXFileReference; explicitFileType = wrapper.application; path = Livecript.app; sourceTree = BUILT_PRODUCTS_DIR;};
 F219C0274590DA45E4BEF1EA = {isa = PBXFileReference; explicitFileType = wrapper.cfbundle; path = LivecriptTests.xctest; sourceTree = BUILT_PRODUCTS_DIR;};
 3685E330EC5277A9DD5661C6 = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Livecript/Resources/Assets.xcassets; sourceTree = SOURCE_ROOT;};
 CF8A4D27E1C506A7C75A76BE = {isa = PBXBuildFile; fileRef = 3685E330EC5277A9DD5661C6;};
 06F5DC629BD46AAFD46564D1 = {isa = PBXResourcesBuildPhase; buildActionMask = 2147483647; files = (CF8A4D27E1C506A7C75A76BE); runOnlyForDeploymentPostprocessing = 0;};
-64292B1C2B2E13EAD8788FC8 = {isa = PBXGroup; children = (BD807657989E4E475F52F68C,4ABE2D3A7C0ED6A1AFFABD28,3685E330EC5277A9DD5661C6,8BCD5BC4CDFDF0918087C782,F219C0274590DA45E4BEF1EA); sourceTree = "<group>";};
+64292B1C2B2E13EAD8788FC8 = {isa = PBXGroup; children = (BD807657989E4E475F52F68C,4ABE2D3A7C0ED6A1AFFABD28,CC488E7A8A7BD9269EDB12EB,3685E330EC5277A9DD5661C6,8BCD5BC4CDFDF0918087C782,F219C0274590DA45E4BEF1EA); sourceTree = "<group>";};
 89E1FD6268CC0F221A2BE178 = {isa = XCBuildConfiguration; name = Debug; buildSettings = {IPHONEOS_DEPLOYMENT_TARGET = 26.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; SWIFT_STRICT_CONCURRENCY = complete; ENABLE_TESTABILITY = YES; SWIFT_OPTIMIZATION_LEVEL = "-Onone"; DEBUG_INFORMATION_FORMAT = dwarf; GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";};};
 E6DE6C99132752C914FEF632 = {isa = XCBuildConfiguration; name = Release; buildSettings = {IPHONEOS_DEPLOYMENT_TARGET = 26.0; SDKROOT = iphoneos; SWIFT_VERSION = 5.0; CLANG_ENABLE_MODULES = YES; SWIFT_STRICT_CONCURRENCY = complete; ENABLE_TESTABILITY = NO; SWIFT_OPTIMIZATION_LEVEL = "-O"; DEBUG_INFORMATION_FORMAT = dwarf; GCC_PREPROCESSOR_DEFINITIONS = "$(inherited)";};};
 862894B703A6DEDF96A9DD6C = {isa = XCConfigurationList; buildConfigurations = (89E1FD6268CC0F221A2BE178,E6DE6C99132752C914FEF632); defaultConfigurationIsVisible = 0; defaultConfigurationName = Release;};
