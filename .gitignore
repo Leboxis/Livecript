@@ -1,0 +1,8 @@
+.superpowers/
+build/
+DerivedData/
+*.xcuserstate
+xcuserdata/
+__pycache__/
+*.ipa
+*.xcresult
