@@ -14,6 +14,15 @@
       "tintColor": "#208F77",
       "versions": [
         {
+          "version": "1.0.2",
+          "buildVersion": "8",
+          "date": "2026-10-08T18:22:57Z",
+          "downloadURL": "https://github.com/Leboxis/Livecript/releases/download/v1.0.2/Livecript.ipa",
+          "size": 294683,
+          "minOSVersion": "26.0",
+          "localizedDescription": "Transcription Apple locale, historique et vocabulaire personnalisé."
+        },
+        {
           "version": "1.0.1",
           "buildVersion": "6",
           "date": "2026-10-08T18:01:19Z",
