@@ -1,0 +1,9 @@
+{
+  "name": "Livecript",
+  "identifier": "com.leboxis.livecript.source",
+  "subtitle": "Votre voix, simplement du texte.",
+  "website": "https://github.com/Leboxis/Livecript",
+  "iconURL": "https://raw.githubusercontent.com/Leboxis/Livecript/main/distribution/icon.png",
+  "apps": [],
+  "news": []
+}
