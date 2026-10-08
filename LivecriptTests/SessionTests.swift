@@ -6,9 +6,9 @@ import Testing
 /// Polls until `condition` holds so tests observe settled state instead of racing
 /// the session's asynchronous transitions.
 @MainActor
-private func waitUntil(timeout: Duration = .seconds(10), _ condition: () async -> Bool) async throws {
+private func waitUntil(timeout: Duration = .seconds(10), _ condition: () async throws -> Bool) async throws {
     let deadline = ContinuousClock.now + timeout
-    while await !condition() {
+    while try await !condition() {
         if ContinuousClock.now > deadline { throw CancellationError() }
         try await Task.sleep(for: .milliseconds(10))
     }
@@ -136,7 +136,7 @@ struct SessionTests {
         await session.start(configuration: Self.configuration)
 
         service.emitFinal("Texte finalisé.")
-        try await waitUntil { (await store.loadDraft())?.text == "Texte finalisé." }
+        try await waitUntil { (try await store.loadDraft())?.text == "Texte finalisé." }
 
         service.finishError = LivecriptError.invalid("Finalisation impossible.")
         await session.pause()
@@ -153,7 +153,7 @@ struct SessionTests {
         await session.start(configuration: Self.configuration)
 
         service.emitFinal("Bonjour.")
-        try await waitUntil { (await store.loadDraft())?.text == "Bonjour." }
+        try await waitUntil { (try await store.loadDraft())?.text == "Bonjour." }
         await session.pause()
 
         // Settings changed after the session captured its configuration.

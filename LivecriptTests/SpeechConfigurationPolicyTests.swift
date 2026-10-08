@@ -35,7 +35,7 @@ struct SpeechConfigurationPolicyTests {
         // invalid vocabulary must not break standard mode either.
         let context = AnalysisContext()
         try Self.policy(.standard, vocabulary: ["Apple", " apple "]).applyVocabulary(to: context)
-        #expect(context.contextualStrings[.general].isEmpty)
+        #expect(context.contextualStrings[.general]?.isEmpty ?? true)
     }
 
     @Test("Aucun mode n'autorise la reconnaissance serveur")
