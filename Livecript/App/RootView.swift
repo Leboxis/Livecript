@@ -4,11 +4,11 @@ struct RootView: View {
     @Environment(\.scenePhase) private var scenePhase
     @State private var session: TranscriptionSession
     @State private var historyRefresh = HistoryRefresh()
-    @State private var tab: Tab = .transcribe
+    @State private var tab: AppTab = .transcribe
     private let store: TranscriptStore
     let preferences: AppPreferences
     let service: AppleSpeechService
-    private enum Tab: Hashable {
+    private enum AppTab: Hashable {
         case transcribe, history, settings
     }
     init(container: ModelContainer, preferences: AppPreferences, service: AppleSpeechService) {
@@ -21,15 +21,15 @@ struct RootView: View {
             Tab("Transcrire", systemImage: "waveform") {
                 TranscribeView(session: session, store: store, preferences: preferences, service: service)
             }
-            .tag(Tab.transcribe)
+            .tag(AppTab.transcribe)
             Tab("Historique", systemImage: "text.document") {
                 HistoryView(store: store)
             }
-            .tag(Tab.history)
+            .tag(AppTab.history)
             Tab("Réglages", systemImage: "slider.horizontal.3") {
                 SettingsView(preferences: preferences, store: store)
             }
-            .tag(Tab.settings)
+            .tag(AppTab.settings)
         }
         .tint(Color(red: 0.12, green: 0.58, blue: 0.47))
         .environment(historyRefresh)
