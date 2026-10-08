@@ -56,9 +56,10 @@ struct StorePersistenceTests {
         let reopened = TranscriptStore(modelContainer: try StorageFactory.make(at: url))
         let transcripts = try await reopened.transcripts()
 
+        // Renaming only changes the title and the modification date, never the text.
         #expect(transcripts.first?.title == "Titre persistant")
         #expect(transcripts.first?.text == draft.text)
-        #expect(transcripts.first?.createdAt == transcripts.first?.updatedAt)
+        #expect((transcripts.first?.updatedAt ?? .distantPast) >= (transcripts.first?.createdAt ?? .distantFuture))
     }
 
     @Test("Un échec d'écriture est signalé et le brouillon précédent survit")
