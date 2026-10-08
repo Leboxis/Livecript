@@ -18,18 +18,15 @@ struct RootView: View {
     }
     var body: some View {
         TabView(selection: $tab) {
-            Tab("Transcrire", systemImage: "waveform") {
+            Tab("Transcrire", systemImage: "waveform", value: .transcribe) {
                 TranscribeView(session: session, store: store, preferences: preferences, service: service)
             }
-            .tag(AppTab.transcribe)
-            Tab("Historique", systemImage: "text.document") {
+            Tab("Historique", systemImage: "text.document", value: .history) {
                 HistoryView(store: store)
             }
-            .tag(AppTab.history)
-            Tab("Réglages", systemImage: "slider.horizontal.3") {
+            Tab("Réglages", systemImage: "slider.horizontal.3", value: .settings) {
                 SettingsView(preferences: preferences, store: store)
             }
-            .tag(AppTab.settings)
         }
         .tint(Color(red: 0.12, green: 0.58, blue: 0.47))
         .environment(historyRefresh)
