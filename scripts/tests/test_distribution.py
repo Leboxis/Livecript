@@ -1,6 +1,7 @@
-import unittest, tempfile, plistlib, zipfile, sys, copy
+import unittest, tempfile, plistlib, zipfile, sys, copy, json, subprocess
 from pathlib import Path
-sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
+SCRIPTS=Path(__file__).resolve().parents[1]
+sys.path.insert(0,str(SCRIPTS))
 from package_ipa import package_ipa
 from generate_source import generate_source
 
@@ -18,7 +19,10 @@ class DistributionTests(unittest.TestCase):
   with self.assertRaises(ValueError):package_ipa(self.root/'missing.app',self.ipa)
  def test_archive_contains_bundle(self):
   self.make()
-  with zipfile.ZipFile(self.ipa) as z:self.assertIn('Payload/Livecript.app/Livecript',z.namelist())
+  with zipfile.ZipFile(self.ipa) as z:
+   names=z.namelist()
+   self.assertIn('Payload/Livecript.app/Info.plist',names)
+   self.assertIn('Payload/Livecript.app/Livecript',names)
  def test_real_size_and_idempotency(self):
   source=self.make();v=source['apps'][0]['versions'][0];self.assertEqual(v['size'],self.ipa.stat().st_size)
   again=generate_source(source,self.ipa,'1.0.0',v['date'],v['downloadURL'],'https://example.com/icon.png')
@@ -33,4 +37,24 @@ class DistributionTests(unittest.TestCase):
  def test_mismatched_version_rejected(self):
   self.make()
   with self.assertRaises(ValueError):generate_source({},self.ipa,'9.0.0','2026-10-08','https://example.com/a.ipa','https://example.com/i.png')
+ def test_privacy_matches_info_plist(self):
+  source=self.make()
+  # AltStore refuses installs whose declared privacy does not match the IPA.
+  self.assertEqual(source['apps'][0]['appPermissions']['privacy'],{'NSMicrophoneUsageDescription':'Microphone local'})
+  self.assertEqual(source['apps'][0]['appPermissions']['entitlements'],[])
+ def test_failed_upload_does_not_publish_catalogue(self):
+  # The workflow only regenerates the catalogue after the IPA is uploaded and
+  # re-downloaded. A failure before that must leave the published source intact.
+  published={'name':'Livecript','identifier':'com.leboxis.livecript.source','apps':[],'news':[]}
+  catalogue=self.root/'source.json';catalogue.write_text(json.dumps(published))
+  previous=self.root/'previous.json';previous.write_text(json.dumps(published))
+
+  with self.assertRaises(ValueError):
+   generate_source(published,self.root/'missing.ipa','1.0.0','2026-10-08','https://example.com/a.ipa','https://example.com/i.png')
+  self.assertEqual(json.loads(catalogue.read_text()),published)
+
+  # The CLI writes atomically, so a rejected run cannot truncate the source.
+  run=subprocess.run([sys.executable,str(SCRIPTS/'generate_source.py'),'--previous',str(previous),'--ipa',str(self.root/'missing.ipa'),'--version','1.0.0','--date','2026-10-08','--download-url','https://example.com/a.ipa','--icon-url','https://example.com/i.png','--output',str(catalogue)],capture_output=True,text=True)
+  self.assertNotEqual(run.returncode,0,run.stdout+run.stderr)
+  self.assertEqual(json.loads(catalogue.read_text()),published)
 if __name__=='__main__':unittest.main()

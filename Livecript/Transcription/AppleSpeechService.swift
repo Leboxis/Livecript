@@ -26,17 +26,21 @@ import Speech
         guard !preparing else { throw LivecriptError.invalid("Une préparation est déjà en cours.") }
         preparing = true; defer { preparing = false; downloadProgress = nil }
         resourceMessage = "Vérification du modèle…"
+        let policy = SpeechConfigurationPolicy(localeIdentifier: configuration.localeIdentifier,
+                                               mode: configuration.mode,
+                                               vocabulary: configuration.vocabulary)
         do {
-            let locale = Locale(identifier: configuration.localeIdentifier)
             let modules: [any SpeechModule]
-            if configuration.mode == .standard {
-                guard SpeechTranscriber.isAvailable,
-                      let supported = await SpeechTranscriber.supportedLocale(equivalentTo: locale) else { throw LivecriptError.invalid("Le mode Standard n’est pas disponible pour cette langue ou cet appareil.") }
-                let t = SpeechTranscriber(locale: supported, transcriptionOptions: [], reportingOptions: [.volatileResults], attributeOptions: [])
+            switch policy.moduleKind {
+            case .standardTranscriber:
+                let resolved = try policy.validateSupport(isModuleAvailable: SpeechTranscriber.isAvailable,
+                                                         resolvedLocale: await SpeechTranscriber.supportedLocale(equivalentTo: policy.locale))
+                let t = SpeechTranscriber(locale: resolved, transcriptionOptions: [], reportingOptions: [.volatileResults], attributeOptions: [])
                 transcriber = t; dictation = nil; modules = [t]
-            } else {
-                guard let supported = await DictationTranscriber.supportedLocale(equivalentTo: locale) else { throw LivecriptError.invalid("La dictée locale n’est pas disponible pour cette langue.") }
-                let t = DictationTranscriber(locale: supported, contentHints: [], transcriptionOptions: [], reportingOptions: [.volatileResults], attributeOptions: [])
+            case .dictationTranscriber:
+                let resolved = try policy.validateSupport(isModuleAvailable: true,
+                                                         resolvedLocale: await DictationTranscriber.supportedLocale(equivalentTo: policy.locale))
+                let t = DictationTranscriber(locale: resolved, contentHints: [], transcriptionOptions: [], reportingOptions: [.volatileResults], attributeOptions: [])
                 dictation = t; transcriber = nil; modules = [t]
             }
             try Task.checkCancellation()
@@ -53,9 +57,9 @@ import Speech
             }
             try Task.checkCancellation()
             let instance = SpeechAnalyzer(modules: modules)
-            if configuration.mode == .customVocabulary {
+            if policy.appliesVocabulary {
                 let context = AnalysisContext()
-                context.contextualStrings[.general] = try VocabularyRules.validate(configuration.vocabulary)
+                try policy.applyVocabulary(to: context)
                 try await instance.setContext(context)
             }
             guard let audioFormat = await SpeechAnalyzer.bestAvailableAudioFormat(compatibleWith: modules) else { throw LivecriptError.invalid("Format audio indisponible.") }

@@ -43,4 +43,14 @@ enum StorageFactory {
         return try ModelContainer(for: schema, migrationPlan: LivecriptMigrationPlan.self,
                                   configurations: ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory, cloudKitDatabase: .none))
     }
+
+    /// On-disk container at an explicit location, used to prove that transcripts
+    /// and drafts survive relaunches. `allowsSave: false` injects a write failure
+    /// so recovery paths can be exercised without corrupting real data.
+    static func make(at url: URL, allowsSave: Bool = true) throws -> ModelContainer {
+        let schema = Schema(versionedSchema: LivecriptSchemaV1.self)
+        let configuration = ModelConfiguration("Livecript", schema: schema, url: url,
+                                               allowsSave: allowsSave, cloudKitDatabase: .none)
+        return try ModelContainer(for: schema, migrationPlan: LivecriptMigrationPlan.self, configurations: configuration)
+    }
 }

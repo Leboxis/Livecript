@@ -31,4 +31,18 @@ struct CoreTests {
         #expect(try VocabularyRules.validate((0..<100).map { "Terme \($0)" }).count == 100)
         #expect(throws: (any Error).self) { try VocabularyRules.validate((0...100).map { "Terme \($0)" }) }
     }
+    @Test func editVocabularyAtCapacityAllowed() throws {
+        var atCapacity = (0..<100).map { "Terme \($0)" }
+        #expect(try VocabularyRules.validate(atCapacity).count == 100)
+
+        // Editing an existing term must stay possible once the limit is reached.
+        atCapacity[42] = "  Terme remplacé  "
+        let edited = try VocabularyRules.validate(atCapacity)
+        #expect(edited.count == 100)
+        #expect(edited[42] == "Terme remplacé")
+
+        // Renaming a term onto an existing one is still a duplicate.
+        atCapacity[42] = atCapacity[7]
+        #expect(throws: (any Error).self) { try VocabularyRules.validate(atCapacity) }
+    }
 }

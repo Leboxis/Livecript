@@ -9,7 +9,8 @@ appfiles=sorted((root/'Livecript').rglob('*.swift'));testfiles=sorted((root/'Liv
 def refs(files,target):
  result=[]; builds=[]
  for f in files:
-  path=str(f.relative_to(root));r=add(path,f'isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "{path}"; sourceTree = SOURCE_ROOT;');result.append(r)
+  # as_posix(): Xcode requires forward slashes even when generated on Windows.
+  path=f.relative_to(root).as_posix();r=add(path,f'isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = "{path}"; sourceTree = SOURCE_ROOT;');result.append(r)
   builds.append(add('build'+path,f'isa = PBXBuildFile; fileRef = {r};'))
  add(target+'sources','isa = PBXSourcesBuildPhase; buildActionMask = 2147483647; files = ('+','.join(builds)+'); runOnlyForDeploymentPostprocessing = 0;')
  return result
