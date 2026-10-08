@@ -1,0 +1,24 @@
+name: iOS Build
+on:
+  push:
+    branches: [feature/livecript-ios, main]
+  pull_request:
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: macos-26
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode version
+        run: xcodebuild -version
+      - name: Simulator tests
+        run: bash scripts/ci-test.sh
+      - name: Device build
+        run: xcodebuild -project Livecript.xcodeproj -scheme Livecript -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO build
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: build/Tests.xcresult

@@ -1,0 +1,71 @@
+name: Release IPA
+on:
+  push:
+    branches: [main]
+    paths: ['Livecript/**', 'LivecriptTests/**', 'Livecript.xcodeproj/**', 'scripts/**', '.github/workflows/release.yml']
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version MAJOR.MINOR.PATCH'
+        default: '1.0.0'
+        required: true
+permissions:
+  contents: write
+concurrency:
+  group: livecript-release
+  cancel-in-progress: false
+jobs:
+  release:
+    runs-on: macos-26
+    env:
+      GH_TOKEN: ${{ github.token }}
+      RELEASE_VERSION: ${{ inputs.version || '1.0.0' }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Validate version
+        run: python3 -c 'import os,re; assert re.fullmatch(r"[0-9]+\.[0-9]+\.[0-9]+",os.environ["RELEASE_VERSION"])'
+      - name: Test distribution
+        run: python3 -m unittest discover -s scripts/tests
+      - name: Simulator tests
+        run: bash scripts/ci-test.sh
+      - name: Build for iPhone
+        run: xcodebuild -project Livecript.xcodeproj -scheme Livecript -configuration Release -sdk iphoneos -destination 'generic/platform=iOS' -derivedDataPath build CODE_SIGNING_ALLOWED=NO MARKETING_VERSION="$RELEASE_VERSION" CURRENT_PROJECT_VERSION="$GITHUB_RUN_NUMBER" build
+      - name: Package IPA
+        run: |
+          python3 scripts/package_ipa.py --app build/Build/Products/Release-iphoneos/Livecript.app --output build/Livecript.ipa
+          shasum -a 256 build/Livecript.ipa > build/Livecript.ipa.sha256
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Livecript-IPA
+          path: |
+            build/Livecript.ipa
+            build/Livecript.ipa.sha256
+      - name: Publish release and update source
+        run: |
+          set -euo pipefail
+          TAG="v$RELEASE_VERSION"
+          if gh release view "$TAG" >/dev/null 2>&1; then
+            echo "This version already exists. Choose a new version to preserve immutable releases."
+            exit 1
+          fi
+          gh release create "$TAG" --draft --target "$GITHUB_SHA" --title "Livecript $RELEASE_VERSION" --notes-file docs/release-notes.md
+          gh release upload "$TAG" build/Livecript.ipa build/Livecript.ipa.sha256
+          gh release edit "$TAG" --draft=false
+          curl --fail --location --retry 5 --output build/verified.ipa "https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/Livecript.ipa"
+          cmp build/Livecript.ipa build/verified.ipa
+          git fetch origin main
+          git checkout main
+          git pull --ff-only origin main
+          python3 scripts/generate_source.py --previous distribution/source.json --ipa build/verified.ipa --version "$RELEASE_VERSION" --date "$(date -u +%Y-%m-%dT%H:%M:%SZ)" --download-url "https://github.com/$GITHUB_REPOSITORY/releases/download/$TAG/Livecript.ipa" --icon-url "https://raw.githubusercontent.com/$GITHUB_REPOSITORY/main/distribution/icon.png" --output distribution/source.json
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add distribution/source.json
+          git commit -m "release: publish SideStore metadata for $TAG"
+          git push origin main
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: release-test-results
+          path: build/Tests.xcresult
