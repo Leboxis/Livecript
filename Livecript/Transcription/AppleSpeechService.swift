@@ -100,14 +100,26 @@ import Speech
         inputs = input.continuation
         if let transcriber {
             results = Task {
+                var previous: (String, Bool)?
                 for try await result in transcriber.results {
-                    output.continuation.yield(.transcript(.init(segmentID: segmentID, text: String(result.text.characters), isFinal: result.isFinal)))
+                    // Volatile results often repeat the same text; rebuilding the
+                    // whole segment for each of them delays the visible update.
+                    let text = String(result.text.characters)
+                    let key = (text, result.isFinal)
+                    if key == previous { continue }
+                    previous = key
+                    output.continuation.yield(.transcript(.init(segmentID: segmentID, text: text, isFinal: result.isFinal)))
                 }
             }
         } else if let dictation {
             results = Task {
+                var previous: (String, Bool)?
                 for try await result in dictation.results {
-                    output.continuation.yield(.transcript(.init(segmentID: segmentID, text: String(result.text.characters), isFinal: result.isFinal)))
+                    let text = String(result.text.characters)
+                    let key = (text, result.isFinal)
+                    if key == previous { continue }
+                    previous = key
+                    output.continuation.yield(.transcript(.init(segmentID: segmentID, text: text, isFinal: result.isFinal)))
                 }
             }
         }

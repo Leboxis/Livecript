@@ -12,7 +12,9 @@ final class MicrophoneCapture: @unchecked Sendable {
         guard format.sampleRate > 0, format.channelCount > 0 else { throw LivecriptError.invalid("Aucun microphone disponible.") }
         let pair = AsyncThrowingStream<AVAudioPCMBuffer, Error>.makeStream(bufferingPolicy: .bufferingOldest(64))
         continuation = pair.continuation
-        node.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in
+        // 512 frames is roughly 11 ms of audio: small enough that the first
+        // transcript is not delayed by a partially filled tap buffer.
+        node.installTap(onBus: 0, bufferSize: 512, format: format) { buffer, _ in
             guard let copy = AVAudioPCMBuffer(pcmFormat: buffer.format, frameCapacity: buffer.frameLength) else { return }
             copy.frameLength = buffer.frameLength
             let source = UnsafeMutableAudioBufferListPointer(UnsafeMutablePointer(mutating: buffer.audioBufferList))
