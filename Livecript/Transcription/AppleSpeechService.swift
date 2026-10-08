@@ -67,6 +67,26 @@ import Speech
             analyzer = instance; format = audioFormat; resourceMessage = "Prêt · hors connexion"
         } catch { resourceMessage = "Modèle indisponible · Réessayer"; throw error }
     }
+    /// Decides whether an audio notification must pause the capture.
+    /// Activating our own session re-evaluates the route (category change,
+    /// override, wake…), which must not stop the transcription we just started.
+    /// Only an interruption that began, a vanished input device, or a media
+    /// server reset genuinely ends the capture.
+    static func interruptsCapture(for notification: Notification) -> Bool {
+        switch notification.name {
+        case AVAudioSession.interruptionNotification:
+            let raw = notification.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt
+            return raw == AVAudioSession.InterruptionType.began.rawValue
+        case AVAudioSession.routeChangeNotification:
+            guard let raw = notification.userInfo?[AVAudioSessionRouteChangeReasonKey] as? UInt,
+                  let reason = AVAudioSession.RouteChangeReason(rawValue: raw) else { return false }
+            return reason == .oldDeviceUnavailable
+        case AVAudioSession.mediaServicesWereResetNotification:
+            return true
+        default:
+            return false
+        }
+    }
     func start(segmentID: UUID) async throws -> AsyncThrowingStream<SpeechEvent, Error> {
         guard let analyzer, let format else { throw LivecriptError.invalid("Préparez le modèle avant de démarrer.") }
         guard await AVAudioApplication.requestRecordPermission() else { throw LivecriptError.invalid("Autorisez le microphone dans les réglages de l’iPhone.") }
@@ -126,9 +146,7 @@ import Speech
             }
             for name in [AVAudioSession.interruptionNotification, AVAudioSession.routeChangeNotification, AVAudioSession.mediaServicesWereResetNotification] {
                 notifications.append(NotificationCenter.default.addObserver(forName: name, object: nil, queue: .main) { note in
-                    if name == AVAudioSession.interruptionNotification,
-                       let raw = note.userInfo?[AVAudioSessionInterruptionTypeKey] as? UInt,
-                       raw != AVAudioSession.InterruptionType.began.rawValue { return }
+                    guard Self.interruptsCapture(for: note) else { return }
                     output.continuation.yield(.interrupted)
                 })
             }

@@ -20,6 +20,8 @@ private func waitUntil(timeout: Duration = .seconds(10), _ condition: () async t
 final class ControllableSpeech: SpeechService {
     var suspendsPrepare = false
     var finishError: (any Error)?
+    /// When true, `finish()` never returns, mimicking a stalled audio pipeline.
+    var neverFinishes = false
     /// Text the service emits as a final result when finishing, mimicking a
     /// transcriber that still holds a pending word.
     var yieldsTextOnFinish: String?
@@ -51,6 +53,7 @@ final class ControllableSpeech: SpeechService {
     }
 
     func finish() async throws {
+        if neverFinishes { try await Task.sleep(for: .seconds(60)) }
         if let yieldsTextOnFinish { emitFinal(yieldsTextOnFinish) }
         continuation?.finish()
         if let finishError { throw finishError }
@@ -145,6 +148,25 @@ struct SessionTests {
         #expect(session.errorMessage != nil)
         #expect(session.finalText == "Texte finalisé.")
         #expect(try await store.loadDraft()?.text == "Texte finalisé.")
+    }
+
+    @Test("La finalisation ne bloque jamais l'interface")
+    func pauseFinalizationTimeoutKeepsText() async throws {
+        let (service, store, session) = try makeSession()
+        session.finalizationTimeout = .milliseconds(200)
+        service.neverFinishes = true
+        await session.start(configuration: Self.configuration)
+
+        service.emitFinal("Texte capté.")
+        try await waitUntil { (try await store.loadDraft())?.text == "Texte capté." }
+
+        // pause() itself may stay suspended on the stalled pipeline; the UI
+        // must still leave `.finalizing` with the text kept.
+        Task { await session.pause() }
+        try await waitUntil { session.state == .paused }
+
+        #expect(session.finalText == "Texte capté.")
+        #expect(session.errorMessage != nil)
     }
 
     @Test("Modifier les réglages n'altère pas la session en cours")
