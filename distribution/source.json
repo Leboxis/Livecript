@@ -4,6 +4,33 @@
   "subtitle": "Votre voix, simplement du texte.",
   "website": "https://github.com/Leboxis/Livecript",
   "iconURL": "https://raw.githubusercontent.com/Leboxis/Livecript/main/distribution/icon.png",
-  "apps": [],
+  "apps": [
+    {
+      "name": "Livecript",
+      "bundleIdentifier": "com.leboxis.livecript",
+      "developerName": "Leboxis",
+      "localizedDescription": "Transcription locale avec les modèles Apple, pause et reprise, historique et vocabulaire personnalisé. iOS 26. Modèle à télécharger avant utilisation hors connexion.",
+      "iconURL": "https://raw.githubusercontent.com/Leboxis/Livecript/main/distribution/icon.png",
+      "tintColor": "#208F77",
+      "versions": [
+        {
+          "version": "1.0.0",
+          "buildVersion": "2",
+          "date": "2026-10-08T17:23:29Z",
+          "downloadURL": "https://github.com/Leboxis/Livecript/releases/download/v1.0.0/Livecript.ipa",
+          "size": 290657,
+          "minOSVersion": "26.0",
+          "localizedDescription": "Transcription Apple locale, historique et vocabulaire personnalisé."
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {
+          "NSMicrophoneUsageDescription": "Livecript utilise le microphone pour transcrire votre voix sur cet appareil.",
+          "NSSpeechRecognitionUsageDescription": "Livecript transcrit votre voix localement avec les modèles Apple."
+        }
+      }
+    }
+  ],
   "news": []
 }
