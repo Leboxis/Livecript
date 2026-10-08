@@ -38,26 +38,24 @@ enum LivecriptMigrationPlan: SchemaMigrationPlan {
     static var stages: [MigrationStage] { [] }
 }
 enum StorageFactory {
-    /// Explicit store location. Relying on SwiftData's default path leaves the
-    /// Application Support directory uncreated, which makes the store fail to
-    /// open even though the container is writable, and pushes the app onto the
-    /// "stockage indisponible" screen.
-    static var defaultStoreURL: URL {
-        let base = try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
-                                                appropriateFor: nil, create: true)
-        return (base ?? FileManager.default.temporaryDirectory)
-            .appendingPathComponent("Livecript.store", isDirectory: true)
-    }
-
     static func make(inMemory: Bool = false) throws -> ModelContainer {
-        guard !inMemory else {
-            let schema = Schema(versionedSchema: LivecriptSchemaV1.self)
+        let schema = Schema(versionedSchema: LivecriptSchemaV1.self)
+        if inMemory {
             return try ModelContainer(for: schema, migrationPlan: LivecriptMigrationPlan.self,
                                       configurations: ModelConfiguration(schema: schema, isStoredInMemoryOnly: true, cloudKitDatabase: .none))
         }
-        let url = defaultStoreURL
-        try FileManager.default.createDirectory(at: url, withIntermediateDirectories: true)
-        return try make(at: url)
+        // SwiftData creates the store file itself at its default location, but
+        // the Application Support directory must already exist — ensuring it
+        // here avoids a misleading "stockage indisponible" screen even though
+        // the container is writable. Never pre-create anything at the store
+        // file path itself: a directory there makes the SQLite store impossible
+        // to open (SwiftData error 1).
+        if let base = try? FileManager.default.url(for: .applicationSupportDirectory, in: .userDomainMask,
+                                                   appropriateFor: nil, create: true) {
+            try? FileManager.default.createDirectory(at: base, withIntermediateDirectories: true)
+        }
+        return try ModelContainer(for: schema, migrationPlan: LivecriptMigrationPlan.self,
+                                  configurations: ModelConfiguration(schema: schema, cloudKitDatabase: .none))
     }
 
     /// On-disk container at an explicit location, used to prove that transcripts
