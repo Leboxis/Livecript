@@ -68,4 +68,4 @@ jobs:
         if: always()
         with:
           name: release-test-results
-          path: build/Tests.xcresult
+          path: test-results/Tests.xcresult
